@@ -964,3 +964,37 @@ int ifc_remove_route(const char *ifname, const char*dst, int prefix_length, cons
 {
     return ifc_act_on_route(SIOCDELRT, ifname, dst, prefix_length, gw);
 }
+
+int ifc_get_mtu(const char *name, int *mtuSz)
+{
+    struct ifreq ifr;
+    ifc_init_ifr(name, &ifr);
+
+    if (mtuSz != NULL) {
+        if(ioctl(ifc_ctl_sock, SIOCGIFMTU, &ifr) < 0) {
+            *mtuSz = 0;
+            return -2;
+        } else {
+            *mtuSz = ifr.ifr_mtu;
+            return 0;
+        }
+    }
+
+    return -1;
+}
+
+// Required for Broadcom RILD
+int ifc_set_mtu(const char *name, int mtuSz)
+{
+    struct ifreq ifr;
+    int ret;
+    ifc_init_ifr(name, &ifr);
+    ifr.ifr_mtu = mtuSz;
+
+    ret = ioctl(ifc_ctl_sock, SIOCSIFMTU, &ifr);
+    if (ret < 0) {
+        printerr("ifc_set_mtu: SIOCSIFMTU failed: %d\n", ret);
+    }
+
+    return ret;
+}
