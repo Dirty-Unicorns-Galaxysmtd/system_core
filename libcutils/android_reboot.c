@@ -92,7 +92,7 @@ static void remount_ro(void)
 
 
     /* Now poll /proc/mounts till it's done */
-    while (!remount_ro_done() && (cnt < 50)) {
+    while (!remount_ro_done() && (cnt < 3600)) {
         usleep(100000);
         cnt++;
     }
@@ -118,6 +118,10 @@ int android_reboot(int cmd, int flags, char *arg)
             break;
 
         case ANDROID_RB_RESTART2:
+#ifdef RECOVERY_PRE_COMMAND
+            if (!strncmp((char *)arg,"recovery",8))
+                system( RECOVERY_PRE_COMMAND );
+#endif
             ret = __reboot(LINUX_REBOOT_MAGIC1, LINUX_REBOOT_MAGIC2,
                            LINUX_REBOOT_CMD_RESTART2, arg);
             break;
